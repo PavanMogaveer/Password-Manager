@@ -14,11 +14,19 @@ function Manager() {
   const [PasswordArray, setPasswordArray] = useState([])
 
 
+  const getpassword=async() => {
+    let req=await fetch('http://localhost:3000/')
+    let passwords=await req.json()
+    setPasswordArray(passwords)
+
+  }
+  
   useEffect(() => {
-    let passwords = localStorage.getItem("passwords");
-    if (passwords) {
-      setPasswordArray(JSON.parse(passwords))
-    }
+    getpassword()
+    // let passwords = localStorage.getItem("passwords");
+    // if (passwords) {
+    //   setPasswordArray(JSON.parse(passwords))
+    // }
   }, [])
 
 
@@ -33,18 +41,30 @@ function Manager() {
     }
   }
 
-  const savePassword = () => {
-
+  const savePassword =async () => {
+if(form.url.length>5 && form.username.length>3 && form.password.length>5){
     setPasswordArray([...PasswordArray, {...form,id:uuidv4()}])
-    localStorage.setItem("passwords", JSON.stringify([...PasswordArray, form]))
+
+    await fetch("http://localhost:3000/",{method:"DELETE",headers:{"Content-Type":"application/json"},body: JSON.stringify({id:form.id})});
+   await fetch("http://localhost:3000/",{method:"POST",headers:{"Content-Type":"application/json"},body: JSON.stringify({...form, id: uuidv4()})
+
+  })
+    // localStorage.setItem("passwords", JSON.stringify([...PasswordArray, form]))
     setform({url: "", username: "", password: ""} )
     toast('Saved Successfully');
 }
+else{
+  toast('Inavlid inputs');
 
-const deletePassword = (id) => {
+}
+}
+
+const deletePassword =async (id) => {
 
   setPasswordArray(PasswordArray.filter(item=>item.id!==id))
-  localStorage.setItem("passwords", JSON.stringify(PasswordArray.filter(item=>item.id!==id)))
+  // localStorage.setItem("passwords", JSON.stringify(PasswordArray.filter(item=>item.id!==id)))
+  await fetch("http://localhost:3000/",{method:"DELETE",headers:{"Content-Type":"application/json"},body: JSON.stringify({id})});
+
   toast('Deleted Successfully');
     
   
@@ -53,7 +73,7 @@ const deletePassword = (id) => {
 
 const editPassword = (id) => {
 
-  setform(PasswordArray.filter(item=>item.id===id)[0])
+    setform({...PasswordArray.filter(item=>item.id===id)[0],id:id})
   setPasswordArray(PasswordArray.filter(item=>item.id!==id))
 }
 
@@ -72,7 +92,7 @@ const copytext=(text) => {
 
   return (
     <>
-      <div className="fixed inset-0 -z-10 h-full  w-full bg-white [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#63e_100%)]"></div>
+     
       <div className="container flex   flex-col  items-center justify-center">
         <span className='text-center text-blue-500 font-semibold mb-1'>Password Manager</span>
 <ToastContainer/>
@@ -81,13 +101,13 @@ const copytext=(text) => {
 
         <div className='my-1  flex w-3/4 gap-2 m-auto flex-col md:flex-row '>
           <input type="text" value={form.username} onChange={handlechange} name="username" id="username" placeholder='Enter WebsiteName' className=' border border-blue-300 px-3 py-1 w-3/5 rounded-full  my-1 ' />
-          <div className="pass relative -z-10 ">
+          <div className="pass relative z-0 ">
 
             <input type="password" ref={passref} value={form.password} onChange={handlechange} name="password" id="password" placeholder='Enter Password' className=' border border-blue-300 px-3 py-1  w-full md:w-full rounded-full  my-1 ' />
 
             <span onClick={toggle} className='absolute right-[2px] top-[5px]  hover:cursor-pointer'>
 
-              <img className='p-1' ref={ref} width={30} src="/public/icons/eye.svg" alt="eye" />
+              <img className='p-1' ref={ref} width={30} src="/icons/eye.svg" alt="eye" />
             </span>
           </div>
         </div>
@@ -141,8 +161,8 @@ const copytext=(text) => {
                         </div></td>
 
 
-                        <td className='border border-blue-100 py-1 '>   <div className='cursor-pointer  flex justify-center   '> 
-                      {element.password}
+                        <td className='border border-blue-100 py-1 '>   <div className='cursor-pointer  flex justify-center   '>
+                          {"*".repeat(element.password.length)}
                       <span onClick={()=>copytext(element.password)}> <lord-icon src="https://cdn.lordicon.com/iykgtsbt.json"
                           trigger="hover" style={{"width":"30px",'height':'30px'}}>
                             
